@@ -100,11 +100,6 @@ You can also compute all markers for all clusters at once. This may take some ti
 tiss.markers <- FindAllMarkers(object = tiss, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
 ```
 
-```{r}
-save.image("bladder_droplet_image.RData")
-```
-
-
 Display the top markers you computed above.
 ```{r}
 tiss.markers %>% group_by(cluster) %>% top_n(20, avg_logFC)
