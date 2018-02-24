@@ -11,7 +11,7 @@ Specify the tissue of interest, run the boilerplate code which sets up the funct
 tissue_of_interest = "Marrow"
 library(here)
 source(here("00_data_ingest", "02_tissue_analysis_rmd", "boilerplate.R"))
-load_tissue_facs(tissue_of_interest)
+tiss = load_tissue_facs(tissue_of_interest)
 ```
 
 Visualize top genes in principal components
@@ -87,18 +87,33 @@ clust.markers <- FindMarkers(object = tiss, ident.1 = 0, only.pos = TRUE, min.pc
 print(x = head(x= clust.markers, n = 10))
 ```
 
-You can also compute all markers for all clusters at once. This may take some time.
+<!-- You can also compute all markers for all clusters at once. This may take some time. -->
+<!-- ```{r} -->
+<!-- tiss.markers <- FindAllMarkers(object = tiss, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25) -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- head(tiss.markers) -->
+<!-- ``` -->
+
+<!-- Display the top markers you computed above. -->
+<!-- ```{r} -->
+<!-- tiss.markers %>% group_by(cluster) %>% top_n(5, avg_logFC) -->
+<!-- ``` -->
+
+Compare to figshare annotations
 ```{r}
-tiss.markers <- FindAllMarkers(object = tiss, only.pos = TRUE, min.pct = 0.25, thresh.use = 0.25)
-```
-```{r}
-head(tiss.markers)
+library(tidyverse)
+figshare_annotation = read_csv(here("00_data_ingest","00_facs_raw_data", "annotations_FACS.csv"))
+figshare_annotation = filter(figshare_annotation, tissue == tissue_of_interest)
+tiss@meta.data[, 'figshare_annotation'] <- NA
+tiss@meta.data[as.character(figshare_annotation$cell), 'figshare_annotation'] <- as.character(figshare_annotation$cell_ontology_class)
+TSNEPlot(object = tiss, do.return = TRUE, group.by = "figshare_annotation")
 ```
 
-Display the top markers you computed above.
 ```{r}
-tiss.markers %>% group_by(cluster) %>% top_n(5, avg_diff)
+table(tiss@meta.data$figshare_annotation, tiss@ident)
 ```
+
 
 ## Assigning cell type identity to clusters
 
@@ -121,17 +136,19 @@ tiss <- StashIdent(object = tiss, save.name = "cluster.ids")
 
 # enumerate current cluster IDs and the labels for them
 cluster.ids <- c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-free_annotation <- c()
-cell_ontology_class <-c("hematopoietic stem cell", "B cell", "B cell", "neutrophil", "granulocyte", "monocyte", "B cell", "T_NK", "neutrophil", "Fraction A pre-pro B cell", "hematopoietic stem cell")
-cell_ontology_id <- c("CL:0000037", "CL:0000236", "CL:0000236", "CL:0000775", "CL:0000094", "CL:0000576", "CL:0000236", NA, "CL:0000775", "CL:0002045", "CL:0000037")
-  
+cell_ontology_class <- c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+free_annotation <-c("hematopoietic stem cell", "B cell", "B cell", "neutrophil", "granulocyte", "monocyte", "B cell", "T_NK", "neutrophil", "Fraction A pre-pro B cell", "hematopoietic stem cell")
 
-tiss@meta.data[,'free_annotation'] <- NA
-tiss@meta.data[,'cell_ontology_class'] <- plyr::mapvalues(x = tiss@ident, from = cluster.ids, to = cell_ontology_class)
-tiss@meta.data[,'cell_ontology_id'] <- plyr::mapvalues(x = tiss@ident, from = cluster.ids, to = cell_ontology_id)
+validate_cell_ontology(cell_ontology_class)
+cell_ontology_id = convert_to_cell_ontology_id(cell_ontology_class)
 
-tiss@meta.data[tiss@cell.names,'cell_ontology_class'] <- as.character(tiss@meta.data$cell_ontology_class)
-tiss@meta.data[tiss@cell.names,'cell_ontology_id'] <- as.character(tiss@meta.data$cell_ontology_id)
+tiss@meta.data['free_annotation'] <- as.character(plyr::mapvalues(x = tiss@ident, from = cluster.ids, to = free_annotation))
+validate_cell_ontology(cell_ontology_class)
+cell_ontology_id = convert_to_cell_ontology_id(cell_ontology_class)
+
+tiss@meta.data['cell_ontology_class'] <- as.character(plyr::mapvalues(x = tiss@ident, from = cluster.ids, to = cell_ontology_class))
+tiss@meta.data['cell_ontology_id'] <- as.character(plyr::mapvalues(x = tiss@ident, from = cluster.ids, to = cell_ontology_id))
+
 
 
 TSNEPlot(object = tiss, do.label = TRUE, pt.size = 0.5, group.by='cell_ontology_class')
