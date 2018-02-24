@@ -197,9 +197,6 @@ for (i in 0:6) {clustermarkers = filter(tiss.markers, cluster == i)$gene
 DotPlot(tiss, genes.plot = clustermarkers[1:10], plot.legend = T)}
 ```
 
-```{r}
-save.image("bladder_plate_020818.RData")
-```
 
 # Save the Robject for later
 When you save the annotated tissue, please give it a name.
