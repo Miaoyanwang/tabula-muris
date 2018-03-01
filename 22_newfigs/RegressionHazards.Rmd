@@ -48,11 +48,15 @@ str(tiss@meta.data['free_annotation'])
 ```
 
 ```{r}
+FetchData(tiss, c('percent.mito', 'Pecam1', 'free_annotation')) %>% ggplot(aes(x = percent.mito, y = Pecam1)) + geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
 FetchData(tiss, c('percent.mito', 'Pecam1', 'free_annotation')) %>% ggplot(aes(x = percent.mito, y = Pecam1, color = free_annotation)) + geom_point() +
   geom_smooth(method = "lm", se = FALSE)
 
-FetchData(tiss, c('percent.mito', 'Pecam1', 'free_annotation')) %>% ggplot(aes(x = percent.mito, y = Pecam1)) + geom_point() +
-  geom_smooth(method = "lm", se = FALSE)
+FetchData(tiss, c('percent.mito', 'Pecam1', 'free_annotation')) %>% filter(Pecam1 > 0) %>% ggplot(aes(x = percent.mito, y = Pecam1)) + geom_point() +  geom_smooth(method = "lm", se = FALSE)
+
+FetchData(tiss, c('percent.mito', 'Pecam1', 'free_annotation')) %>% filter(Pecam1 > 0) %>% ggplot(aes(x = percent.mito, y = Pecam1, color = free_annotation)) + geom_point() +  geom_smooth(method = "lm", se = FALSE)
 ```
 
 
